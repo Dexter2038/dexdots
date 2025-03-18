@@ -1,0 +1,64 @@
+
+=======================================
+        Neovim Keybindings Cheat Sheet
+=======================================
+
+-- File & Path Operations
+<Leader>xc   : Copy file path + current line number
+<Leader>xo   : Open file from clipboard (path:line)
+<Leader>tm   : Open tmux pane in file's directory
+
+-- Text Replacement
+<Leader>re   : Replace word under cursor (normal & visual mode)
+
+-- Navigation & Jumping
+<BS>        : Jump back in jump list (<C-o>)
+
+-- Yank, Delete & Format
+Smart dd    : Delete current line (only yanks non-empty lines)
+<Leader>Y   : Yank (copy) whole buffer to clipboard (:%y+)
+<Leader>F   : Format buffer (via LSP)
+
+-- Line Numbering & Quickfix
+<Leader>tn  : Toggle numbering (absolute/relative/none)
+<Leader>q   : Toggle quickfix window
+
+-- Visual Mode Enhancements
+.           : Repeat command on visual selection
+@           : Repeat macro on visual selection
+
+-- General Vim Commands
+ciw         : Change inner word
+yy          : Yank (copy) current line
+dd          : Delete current line
+p / P       : Paste after/before cursor
+
+-- LSP & Plugin Shortcuts
+<Leader>e   : Toggle NvimTree file explorer
+<Leader>f   : Live grep via Telescope
+<Leader>w   : Save file
+<Leader>d   : Jump to definition (LSP)
+<Leader>h   : Hover documentation (LSP)
+
+-- Debugger (DAP) Controls
+<F9>        : Toggle DAP UI
+<F5>        : Continue debugging
+<F10>       : Step over
+<F11>       : Step into
+<F12>       : Step out
+<Leader>db  : Toggle breakpoint
+
+-- Completion (nvim-cmp)
+<Tab>       : Next completion item
+<S-Tab>     : Previous completion item
+<C-Space>   : Trigger completion
+<C-e>       : Close completion window
+<CR>        : Confirm selection
+
+-- Miscellaneous
+<Leader>p   : Run Pendulum plugin
+<Leader>g   : Open LazyGit
+<Leader>l   : Run lazy.nvim command (:Lazy)
+<Leader>a   : Open Alpha dashboard
+
+=======================================
