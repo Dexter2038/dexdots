@@ -46,7 +46,7 @@ p / P       : Paste after/before cursor
 <F10>       : Step over
 <F11>       : Step into
 <F12>       : Step out
-<Leader>db  : Toggle breakpoint
+<Leader>bp  : Toggle breakpoint
 
 -- Completion (nvim-cmp)
 <Tab>       : Next completion item
