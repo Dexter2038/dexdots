@@ -7,6 +7,7 @@ vim.opt.relativenumber = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.expandtab = true
+vim.opt.autoindent = true
 vim.opt.smartindent = true
 vim.opt.wrap = false
 vim.opt.ignorecase = true
@@ -16,6 +17,13 @@ vim.opt.mouse = "a"
 vim.opt.clipboard = "unnamedplus"
 vim.opt.splitright = true
 vim.opt.splitbelow = true
+
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "python",
+	callback = function()
+		vim.bo.indentexpr = ""
+	end,
+})
 
 -- Auto-save on changes and leaving insert mode
 vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
@@ -87,6 +95,14 @@ require("lazy").setup({
 		end,
 	},
 
+    -- NVChad
+    {
+        "NvChad/nvim-colorizer.lua",
+        config = function()
+            require("colorizer").setup()
+        end
+    }
+
 	-- Themes: tokyonight and catppuccin
 	{
 		"folke/tokyonight.nvim",
@@ -147,6 +163,16 @@ require("lazy").setup({
 		"lukas-reineke/indent-blankline.nvim",
 		config = function()
 			require("ibl").setup()
+		end,
+	},
+
+	{
+		"windwp/nvim-autopairs",
+		event = "InsertEnter",
+		config = function()
+			require("nvim-autopairs").setup({
+				check_ts = true,
+			})
 		end,
 	},
 
@@ -281,10 +307,24 @@ require("lazy").setup({
 		build = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = "python",
+				ensure_installed = { "python", "rust", "ron" },
 				highlight = { enable = true },
 			})
 		end,
+	},
+
+	{
+		"saecki/crates.nvim",
+		tag = "stable",
+		config = function()
+			require("crates").setup()
+		end,
+	},
+
+	{
+		"mrcjkb/rustaceanvim",
+		version = "^5", -- Recommended
+		lazy = false,
 	},
 
 	-- Gruvbox Theme
@@ -313,6 +353,9 @@ require("lazy").setup({
 					-- Python format and lint
 					null_ls.builtins.formatting.black.with({ filetypes = { "python" } }),
 					null_ls.builtins.diagnostics.ruff.with({ filetypes = { "python" } }),
+					-- null_ls.builtins.diagnostics.gdtoolkit.with({ filetypes = { "gd" } }),
+					-- null_ls.builting.formatting.gdtoolkit.with({ filetypes = { "gd" } }),
+					null_ls.builtins.formatting.djlint.with({ filetypes = { "html" } }),
 					-- JavaScript/TypeScript
 					null_ls.builtins.formatting.prettierd.with({
 						filetypes = { "javascript", "typescript", "css", "html", "json" },
@@ -325,7 +368,7 @@ require("lazy").setup({
 					-- Rust
 					null_ls.builtins.formatting.rustfmt.with({ filetypes = { "rust", "rs", "toml", "yaml" } }),
 					-- Uncomment below for rust_analyzer diagnostics:
-					-- null_ls.builtins.diagnostics.rust_analyzer.with({ filetypes = { "rust", "rs", "toml", "yaml" } }),
+					--null_ls.builtins.diagnostics.rust_analyzer.with({ filetypes = { "rust", "rs", "toml", "yaml" } }),
 				},
 				on_attach = function(client, bufnr)
 					if client.supports_method("textDocument/formatting") then
@@ -524,17 +567,38 @@ lspconfig.pyright.setup({
 })
 
 -- Rust LSP: rust_analyzer
-lspconfig.rust_analyzer.setup({
-	on_attach = function(client, bufnr)
-		client.server_capabilities.documentFormattingProvider = false
-	end,
-})
+--lspconfig.rust_analyzer.setup({
+--	on_attach = function(client, bufnr)
+--		client.server_capabilities.documentFormattingProvider = true
+--	end,
+--	settings = {
+--		["rust-analyzer"] = {
+--			inlayHints = {
+--				enable = true, -- Enable inlay hints for types and other information
+--			},
+--			completion = {
+--				autoimport = { enable = true }, -- Enable automatic imports in completions
+--			},
+--			assist = { importGranularity = "module", importPrefix = "by_self" },
+--			cargo = { loadOutDirsFromCheck = true },
+--			procMacro = { enable = true },
+--		},
+--	},
+--})
 
 ------------------------------------------------
 -- Completion (nvim-cmp) Setup
 ------------------------------------------------
 local cmp = require("cmp")
 cmp.setup({
+	completion = {
+		autocomplete = { cmp.TriggerEvent.TextChanged },
+	},
+	snippet = {
+		expand = function(args)
+			vim.fn["vsnip#anonymous"](args.body) -- Use your snippet engine (e.g., vsnip)
+		end,
+	},
 	mapping = {
 		["<Tab>"] = cmp.mapping.select_next_item(),
 		["<S-Tab>"] = cmp.mapping.select_prev_item(),
@@ -548,6 +612,7 @@ cmp.setup({
 		{ name = "nvim_lsp" },
 		{ name = "buffer" },
 		{ name = "path" },
+		{ name = "vsnip" },
 	},
 })
 
@@ -562,3 +627,14 @@ vim.opt.listchars:append("eol:↴")
 -- Reinitialize scrollbar and animations (if needed)
 require("scrollbar").setup()
 require("mini.animate").setup()
+
+-- themes
+require("catppuccin").setup({
+	flavour = "macchiato", -- latte, frappe, macchiato, mocha
+	integrations = {
+		nvimtree = true,
+		telescope = true,
+		treesitter = true,
+	},
+})
+vim.cmd("colorscheme catppuccin")
