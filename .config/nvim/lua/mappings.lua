@@ -46,6 +46,6 @@ map("n", "dd", smart_dd, { expr = true, desc = "Smart dd: yank only non-empty li
 
 map("n", "<Leader>pp", ":Pendulum<CR>", { desc = "Show pendulum logs table" })
 
-map("i", "<Tab>", accept_codeium_completition, { noremap = true, silent = true, expr = true})
+-- map("i", "<Tab>", accept_codeium_completition, { noremap = true, silent = true, expr = true})
 
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")

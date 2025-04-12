@@ -26,6 +26,7 @@ return {
         "rust",
         "ron",
         "javascript",
+        "gdscript",
       },
     },
   },
@@ -131,15 +132,21 @@ return {
   },
 
   -- Codeium: Code completion assistant
-  {
-    "Exafunction/codeium.vim",
-    event = "VeryLazy",
-    config = function()
-      vim.keymap.set("i", "Tab", function()
-        return vim.fn["codeium#Accept"]()
-      end, { noremap = true, expr = true, silent = true })
-    end,
-  },
+  -- {
+  --   "Exafunction/codeium.vim",
+  --   event = "VeryLazy",
+  --   config = function()
+  --     vim.keymap.set("i", "Tab", function()
+  --       return vim.fn["codeium#Accept"]()
+  --     end, { noremap = true, expr = true, silent = true })
+  --   end,
+  -- },
+
+  -- Github Copilot: Code completion assistant
+  -- {
+  --   "github/copilot.vim",
+  --   lazy = false, -- чтобы плагин загружался сразу
+  -- },
 
   -- Rust crates dependencies aknowledge
   {
