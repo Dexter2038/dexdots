@@ -1,1 +1,1 @@
-chromium --app=https://chat.openai.com
+$(cat ~/.config/ml4w/settings/browser.sh) --new-window https://chat.openai.com

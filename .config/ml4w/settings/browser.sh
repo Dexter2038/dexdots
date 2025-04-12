@@ -1,1 +1,1 @@
-librewolf
+firefox
