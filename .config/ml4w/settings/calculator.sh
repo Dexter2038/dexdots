@@ -1,1 +1,1 @@
-gnome-calculator
+nvim -e qalc
