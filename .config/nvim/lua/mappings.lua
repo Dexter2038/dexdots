@@ -1,7 +1,6 @@
 require "nvchad.mappings"
 
 -- add yours here
-
 -- Smart "dd": Delete without yanking if the line is empty
 local function smart_dd()
   local line = vim.api.nvim_get_current_line()
@@ -46,6 +45,13 @@ map("n", "dd", smart_dd, { expr = true, desc = "Smart dd: yank only non-empty li
 
 map("n", "<Leader>pp", ":Pendulum<CR>", { desc = "Show pendulum logs table" })
 
--- map("i", "<Tab>", accept_codeium_completition, { noremap = true, silent = true, expr = true})
+map("n", "F", function()
+  vim.diagnostic.open_float(nil, { focus = true })
+end, { desc = "Show diagnostic message" })
+
+map("i", "<S-Tab>", accept_codeium_completition, { noremap = true, silent = true, expr = true })
+
+-- Keybinding to open the diagnostics list
+map("n", "<leader>fd", ":Telescope diagnostics<CR>", { noremap = true, silent = true })
 
 -- map({ "n", "i", "v" }, "<C-s>", "<cmd> w <cr>")
