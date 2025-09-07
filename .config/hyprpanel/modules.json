@@ -1,0 +1,15 @@
+{
+  "custom/keyboard_layout": {
+    "icon": "󰌌",
+    "label": "{lang}",
+    "tooltip": "Keybard Layout: {lang}",
+    "execute": "/home/michael/.config/hypr/scripts/get_lang.fish",
+    "executeOnAction": "",
+    "truncationSize": -1,
+    "interval": 50,
+    "hideOnEmpty": false,
+    "actions": {
+      "onLeftClick": "/home/michael/.config/hypr/scripts/change_lang.fish"
+    }
+  }
+}

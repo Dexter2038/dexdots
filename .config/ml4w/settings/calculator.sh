@@ -1,1 +1,0 @@
-nvim -e qalc
