@@ -64,7 +64,9 @@ set packages \
     # Fonts
     ttf-firacode-nerd \
     # Display manager
-    sddm sddm-silent-theme
+    sddm sddm-silent-theme \
+    # Clipboard manager
+    clipse-bin
 
 install_packages $packages
 
