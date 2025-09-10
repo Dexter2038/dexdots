@@ -1,0 +1,18 @@
+/* ##################################
+* # Custom Volume Module Styling #
+* ################################## */
+@include styleModule(
+  // class name
+  'cmodule-keyboard_layout',
+  // styling properties
+  (
+  'text-color': #008080,
+  'icon-color': #008080,
+  'icon-background': #008080,
+  'label-background': #242438,
+  'inner-spacing': 0.5em,
+  'border-enabled': false,
+  'border-color': #008080,
+  'icon-size': 1.2em
+  )
+);

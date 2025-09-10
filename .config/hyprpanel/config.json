@@ -2,7 +2,7 @@
   "bar.customModules.storage.paths": [
     "/"
   ],
-  "theme.bar.border.width": "0.05em",
+  "theme.bar.border.width": "0em",
   "scalingPriority": "hyprland",
   "theme.bar.menus.enableShadow": true,
   "menus.transition": "crossfade",
@@ -19,7 +19,7 @@
   "menus.clock.weather.location": "",
   "menus.clock.time.military": true,
   "menus.volume.raiseMaximumVolume": true,
-  "theme.osd.muted_zero": true,
+  "theme.osd.muted_zero": false,
   "menus.dashboard.recording.path": "$HOME/Видео/Записи",
   "menus.dashboard.directories.left.directory1.label": "󰉍 Загрузки",
   "menus.dashboard.directories.left.directory1.command": "bash -c \"xdg-open $HOME/Загрузки/\"",
@@ -38,9 +38,9 @@
   "bar.customModules.kbLayout.labelType": "layout",
   "bar.customModules.kbLayout.label": false,
   "bar.customModules.weather.unit": "metric",
-  "theme.bar.floating": true,
+  "theme.bar.floating": false,
   "bar.autoHide": "never",
-  "theme.bar.buttons.enableBorders": false,
+  "theme.bar.buttons.enableBorders": true,
   "bar.layouts": {
     "0": {
       "left": [
