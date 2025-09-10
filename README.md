@@ -19,7 +19,7 @@
 - Shell: fish
 - Browser: librewolf
 - Editor: neovim
-- Application launcher: wofi
+- Application launcher: rofi
 - Status bar: hyprpanel
 - Node manager: fnm
 - Bootloader: grub
