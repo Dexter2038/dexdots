@@ -2,7 +2,7 @@
   "bar.customModules.storage.paths": [
     "/"
   ],
-  "theme.bar.border.width": "0em",
+  "theme.bar.border.width": "0.05em",
   "scalingPriority": "hyprland",
   "theme.bar.menus.enableShadow": true,
   "menus.transition": "crossfade",
@@ -17,7 +17,7 @@
   "menus.clock.weather.enabled": false,
   "menus.clock.weather.unit": "metric",
   "menus.clock.weather.location": "",
-  "menus.clock.time.military": true,
+  "menus.clock.time.military": false,
   "menus.volume.raiseMaximumVolume": true,
   "theme.osd.muted_zero": false,
   "menus.dashboard.recording.path": "$HOME/Видео/Записи",
@@ -49,16 +49,17 @@
         "windowtitle"
       ],
       "middle": [
+        "clock",
         "media"
       ],
       "right": [
+        "systray",
         "volume",
         "network",
         "bluetooth",
-        "battery",
         "custom/keyboard_layout",
-        "systray",
-        "clock",
+        "updates",
+        "battery",
         "notifications"
       ]
     },
@@ -94,6 +95,13 @@
     }
   },
   "menus.media.noMediaText": "Ничего не играет",
-  "theme.bar.border.location": "none",
-  "theme.bar.enableShadow": false
+  "theme.bar.border.location": "bottom",
+  "theme.bar.enableShadow": true,
+  "tear": false,
+  "bar.clock.format": "%H:%M:%S",
+  "menus.media.displayTime": true,
+  "menus.media.displayTimeTooltip": false,
+  "theme.notification.enableShadow": true,
+  "menus.clock.time.hideSeconds": false,
+  "theme.bar.location": "top"
 }

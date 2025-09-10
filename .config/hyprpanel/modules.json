@@ -3,13 +3,13 @@
     "icon": "󰌌",
     "label": "{lang}",
     "tooltip": "Keyboard Layout: {lang}",
-    "execute": "/home/michael/.config/hypr/scripts/get_lang.fish",
+    "execute": "$HOME/.config/hypr/scripts/get_lang.fish",
     "executeOnAction": "",
     "truncationSize": -1,
     "interval": 50,
     "hideOnEmpty": false,
     "actions": {
-      "onLeftClick": "/home/michael/.config/hypr/scripts/change_lang.fish"
+      "onLeftClick": "$HOME/.config/hypr/scripts/change_lang.fish"
     }
   }
 }

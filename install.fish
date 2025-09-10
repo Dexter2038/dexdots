@@ -10,6 +10,26 @@ if test (id -u) -eq 0
     exit 1
 end
 
+function confirm_install
+    while true
+        read -l -P "Are you sure you want to run the installation? This will install everything without further prompts. [y/N] " response
+        switch $response
+            case Y y
+                echo "Starting installation..."
+                return 0
+            case '' N n
+                echo "Installation cancelled."
+                exit 1
+            case '*'
+                echo "Please answer y or n."
+        end
+    end
+end
+
+confirm_install
+
+echo "Installing dotfiles..."
+
 # Function to install packages with error handling
 function install_packages
     if paru -S --needed --noconfirm $argv
@@ -24,7 +44,7 @@ end
 if not type -q paru
     echo "Installing paru..."
     if not type -q git
-        sudo pacman -S --noconfirm git
+        sudo pacman -S --noconfirm --needed git
     end
 
     sudo pacman -S --needed --noconfirm base-devel
@@ -54,7 +74,7 @@ set packages \
     hyprpicker hyprsunset-git \
     # Applications
     kitty librewolf-bin thunar thunar-volman thunar-archive-plugin \
-    thunar-media-tags-plugin wofi fastfetch bat lazygit eza \
+    thunar-media-tags-plugin rofi-wayland fastfetch bat lazygit eza \
     # Development tools
     fd ripgrep stow neovim unzip dart-sass fnm-bin direnv zoxide \
     # GUI components
@@ -119,7 +139,8 @@ set -l grub_theme_dir "$HOME/.cache/elegant-grub"
 git clone https://github.com/vinceliuice/Elegant-grub2-themes.git $grub_theme_dir
 sudo $grub_theme_dir/install.sh -t mojave
 
-echo "Installation completed successfully. A reboot is recommended."
+cat $HOME/.config/fastfetch/ascii.txt
+echo "Installation completed successfully! A reboot is recommended."
 read -l -P "Reboot now? [y/N] " confirm
 if string match -q -i y "$confirm"
     sudo reboot
