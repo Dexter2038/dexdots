@@ -8,7 +8,7 @@
   "menus.transition": "crossfade",
   "menus.power.lowBatteryNotification": true,
   "theme.bar.buttons.modules.cpu.enableBorder": false,
-  "menus.dashboard.powermenu.avatar.name": "Михаил",
+  "menus.dashboard.powermenu.avatar.name": "Пользователь",
   "menus.dashboard.shortcuts.left.shortcut1.command": "librwolf",
   "menus.dashboard.shortcuts.left.shortcut1.tooltip": "Браузер",
   "menus.dashboard.shortcuts.left.shortcut4.command": "wofi -show drun",
@@ -39,8 +39,8 @@
   "bar.customModules.kbLayout.label": false,
   "bar.customModules.weather.unit": "metric",
   "theme.bar.floating": false,
-  "bar.autoHide": "never",
-  "theme.bar.buttons.enableBorders": true,
+  "bar.autoHide": "fullscreen",
+  "theme.bar.buttons.enableBorders": false,
   "bar.layouts": {
     "0": {
       "left": [
@@ -95,7 +95,7 @@
     }
   },
   "menus.media.noMediaText": "Ничего не играет",
-  "theme.bar.border.location": "bottom",
+  "theme.bar.border.location": "none",
   "theme.bar.enableShadow": true,
   "tear": false,
   "bar.clock.format": "%H:%M:%S",
