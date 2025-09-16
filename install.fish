@@ -1,118 +1,243 @@
-#!/usr/bin/fish
+#!/usr/bin/env fish
+# originals: https://github.com/caelestia-dots/shell https://github.com/caelestia-dots/caelestia
 
-# Exit on any error and show commands being executed
-set -e
-set -x
+argparse -n 'install.fish' -X 0 \
+    h/help \
+    noconfirm \
+    yay \
+    -- $argv
+or exit
 
-# Check if running as root
-if test (id -u) -eq 0
-    echo "Error: This script should not be run as root"
-    exit 1
+# Print help
+if set -q _flag_h
+    echo 'usage: ./install.sh [-h] [--noconfirm] [--yay]'
+    echo
+    echo 'options:'
+    echo '  -h, --help                  show this help message and exit'
+    echo '  --noconfirm                 do not confirm package installation'
+    echo '  --yay                       use yay instead of paru as AUR helper'
+
+    exit
 end
 
-function confirm_install
-    while true
-        read -l -P "Are you sure you want to run the installation? This will install everything without further prompts. [y/N] " response
-        switch $response
-            case Y y
-                echo "Starting installation..."
-                return 0
-            case '' N n
-                echo "Installation cancelled."
-                exit 1
-            case '*'
-                echo "Please answer y or n."
+# Helper funcs
+function _out -a colour text
+    set_color $colour
+    # Pass arguments other than text to echo
+    echo $argv[3..] -- ":: $text"
+    set_color normal
+end
+
+function log -a text
+    _out cyan $text $argv[2..]
+end
+
+function input -a text
+    _out blue $text $argv[2..]
+end
+
+function confirm-overwrite -a path
+    if test -e $path -o -L $path
+        # No prompt if noconfirm
+        if set -q noconfirm
+            input "$path already exists. Overwrite? [Y/n]"
+            log 'Removing...'
+            rm -rf $path
+        else
+            # Prompt user
+            read -l -p "input '$path already exists. Overwrite? [Y/n] ' -n" confirm || exit 1
+
+            if test "$confirm" = n -o "$confirm" = N
+                log 'Skipping...'
+                return 1
+            else
+                log 'Removing...'
+                rm -rf $path
+            end
         end
     end
+
+    return 0
 end
 
-confirm_install
+# Variables
+set -q _flag_noconfirm && set noconfirm --noconfirm
+set -q _flag_paru && set -l aur_helper yay || set -l aur_helper paru
+set -q XDG_CONFIG_HOME && set -l config $XDG_CONFIG_HOME || set -l config $HOME/.config
+set -q XDG_STATE_HOME && set -l state $XDG_STATE_HOME || set -l state $HOME/.local/state
 
-echo "Installing dotfiles..."
+# Startup prompt
+set_color magenta
+echo '╭─────────────────────────────────────────────────╮'
+echo '│      ______           __          __  _         │'
+echo '│     / ____/___ ____  / /__  _____/ /_(_)___ _   │'
+echo '│    / /   / __ `/ _ \/ / _ \/ ___/ __/ / __ `/   │'
+echo '│   / /___/ /_/ /  __/ /  __(__  ) /_/ / /_/ /    │'
+echo '│   \____/\__,_/\___/_/\___/____/\__/_/\__,_/     │'
+echo '│                                                 │'
+echo '╰─────────────────────────────────────────────────╯'
+set_color normal
+log 'Welcome to the Caelestia dotfiles installer!'
+log 'Before continuing, please ensure you have made a backup of your config directory.'
 
-# Function to install packages with error handling
-function install_packages
-    if paru -S --needed --noconfirm $argv
-        echo "Successfully installed: $argv"
+# Prompt for backup
+if ! set -q _flag_noconfirm
+    log '[1] Two steps ahead of you!  [2] Make one for me please!'
+    read -l -p "input '=> ' -n" choice || exit 1
+
+    if contains -- "$choice" 1 2
+        if test $choice = 2
+            log "Backing up $config..."
+
+            if test -e $config.bak -o -L $config.bak
+                read -l -p "input 'Backup already exists. Overwrite? [Y/n] ' -n" overwrite || exit 1
+
+                if test "$overwrite" = n -o "$overwrite" = N
+                    log 'Skipping...'
+                else
+                    rm -rf $config.bak
+                    cp -r $config $config.bak
+                end
+            else
+                cp -r $config $config.bak
+            end
+        end
     else
-        echo "Failed to install: $argv" >&2
-        return 1
+        log 'No choice selected. Exiting...'
+        exit 1
     end
 end
 
-# Install paru if not present
-if not type -q paru
-    echo "Installing paru..."
-    if not type -q git
-        sudo pacman -S --noconfirm --needed git
-    end
+# Install AUR helper if not already installed
+if ! pacman -Q $aur_helper &>/dev/null
+    log "$aur_helper not installed. Installing..."
 
-    sudo pacman -S --needed --noconfirm base-devel
-    set -l temp_dir (mktemp -d)
-    git clone https://aur.archlinux.org/paru.git $temp_dir
-    cd $temp_dir
-    makepkg -si --noconfirm
-    cd -
-    rm -rf $temp_dir
+    # Install
+    sudo pacman -S --needed git base-devel $noconfirm
+    cd /tmp
+    git clone https://aur.archlinux.org/$aur_helper.git
+    cd $aur_helper
+    makepkg -si
+    cd ..
+    rm -rf $aur_helper
+
+    # Setup
+    $aur_helper -Y --gendb
+    $aur_helper -Y --devel --save
 end
 
-# Update system and install packages
-paru -Syu --noconfirm
+# Install metapackage for deps
+log 'Installing metapackage...'
+$aur_helper -S --needed caelestia-meta $noconfirm
 
-# Organized package list with comments
-set packages \
-    # Audio
-    alsa-firmware sof-firmware alsa-utils pipewire pipewire-audio \
-    pipewire-pulse pipewire-jack wireplumber pavucontrol \
-    # Bluetooth
-    bluez bluez-utils blueman \
-    # System utilities
-    upower power-profiles-daemon pacman-contrib man-db man-pages texinfo \
-    networkmanager sudo gvfs libgtop btop \
-    # Hyprland ecosystem
-    hyprland xdg-desktop-portal-hyprland grimblast-git wf-recorder-git \
-    hyprpicker hyprsunset-git \
-    # Applications
-    kitty librewolf-bin thunar thunar-volman thunar-archive-plugin \
-    thunar-media-tags-plugin rofi-wayland fastfetch bat lazygit eza \
-    # Development tools
-    fd ripgrep stow neovim unzip dart-sass fnm-bin direnv zoxide \
-    # GUI components
-    ags-hyprpanel-git aylurs-gtk-shell-git \
-    # System tools
-    wl-clipboard brightnessctl swww python python-gpustat matugen-bin \
-    # Fonts
-    ttf-firacode-nerd \
-    # Display manager
-    sddm sddm-silent-theme \
-    # Clipboard manager
-    clipse-bin
+# Cd into dir
+cd (dirname (status filename)) || exit 1
 
-install_packages $packages
-
-# Set default applications
-xdg-mime default thunar.desktop inode/directory
-gio mime inode/directory thunar.desktop
-
-set -l browser librewolf.desktop
-for scheme in http https
-    xdg-mime default $browser x-scheme-handler/$scheme
-    gio mime x-scheme-handler/$scheme $browser
+# Install hypr* configs
+if confirm-overwrite $config/hypr
+    log 'Installing hypr* configs...'
+    ln -s (realpath hypr) $config/hypr
+    hyprctl reload
 end
 
-for mime in text/html application/xhtml+xml
-    xdg-mime default $browser $mime
-    gio mime $mime $browser
+# Starship
+if confirm-overwrite $config/starship.toml
+    log 'Installing starship config...'
+    ln -s (realpath starship.toml) $config/starship.toml
 end
 
-xdg-mime default kitty.desktop x-scheme-handler/terminal
-gio mime x-scheme-handler/terminal kitty.desktop
+# Foot
+if confirm-overwrite $config/foot
+    log 'Installing foot config...'
+    ln -s (realpath foot) $config/foot
+end
 
-# Enable services
-systemctl --user enable --now pipewire pipewire-pulse wireplumber
-sudo systemctl enable --now bluetooth NetworkManager sddm
+# Fish
+if confirm-overwrite $config/fish
+    log 'Installing fish config...'
+    ln -s (realpath fish) $config/fish
+end
 
-# Setup flatpak
+# Fastfetch
+if confirm-overwrite $config/fastfetch
+    log 'Installing fastfetch config...'
+    ln -s (realpath fastfetch) $config/fastfetch
+end
+
+# Uwsm
+if confirm-overwrite $config/uwsm
+    log 'Installing uwsm config...'
+    ln -s (realpath uwsm) $config/uwsm
+end
+
+# Btop
+if confirm-overwrite $config/btop
+    log 'Installing btop config...'
+    ln -s (realpath btop) $config/btop
+end
+
+# Nvim
+if confirm-overwrite $config/nvim
+    log 'Installing nvim config...'
+    ln -s (realpath nvim) $config/nvim
+end
+
+log 'Installing librewolf...'
+$aur_helper -S --needed librewolf-bin hunspell-en_US speech-dispatcher $noconfirm
+
+# Install native app
+set -l hosts $HOME/.mozilla/native-messaging-hosts
+set -l lib $HOME/.local/lib/caelestia
+
+if confirm-overwrite $hosts/caelestiafox.json
+    log 'Installing zen native app manifest...'
+    mkdir -p $hosts
+    cp zen/native_app/manifest.json $hosts/caelestiafox.json
+    sed -i "s|{{ \$lib }}|$lib|g" $hosts/caelestiafox.json
+end
+
+if confirm-overwrite $lib/caelestiafox
+    log 'Installing zen native app...'
+    mkdir -p $lib
+    ln -s (realpath zen/native_app/app.fish) $lib/caelestiafox
+end
+
+# Prompt user to install extension
+log 'Please install the CaelestiaFox extension from https://addons.mozilla.org/en-US/firefox/addon/caelestiafox if you have not already done so.'
+
+# Generate scheme stuff if needed
+if ! test -f $state/caelestia/scheme.json
+    caelestia scheme set -n shadotheme
+    sleep .5
+    hyprctl reload
+end
+
+log 'Installing caelestia optional plugins...'
+$aur_helper -S --needed thunar thunar-archive-plugin thunar-volman thunar-media-tags-plugin gvfs catfish tumbler file-roller engrampa ark xarchiver $noconfirm
+$aur_helper -S --needed todoist-appimage $noconfirm
+$aur_helper -S --needed uwsm $noconfirm
+$aur_helper -S --needed gnome-keyring $noconfirm
+$aur_helper -S --needed polkit-gnome $noconfirm
+
+log 'Installing audio packages...'
+$aur_helper -S --needed alsa-firmware sof-firmware alsa-utils pipewire pipewire-alsa pipewire-audio pipewire-pulse pipewire-jack wireplumber pavucontrol $noconfirm
+
+log 'Installing bluetooth packages...'
+$aur_helper -S --needed bluez bluez-utils $noconfirm
+
+log 'Installing dev packages...'
+$aur_helper -S --needed ripgrep fd bat eza lazygit fnm-bin direnv zoxide $noconfirm
+
+log 'Installing font...'
+$aur_helper -S --needed ttf-firacode-nerd $noconfirm
+
+log 'Installing code editor and help pages...'
+$aur_helper -S --needed neovim man-pages man-db man-pages-ru $noconfirm
+
+log 'Installing flatpak...'
+$aur_helper -S --needed flatpak $noconfirm
+
+log 'Setup flatpak...'
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 set -l flatpak_apps \
     org.vinegarhq.Sober \
@@ -121,27 +246,25 @@ set -l flatpak_apps \
     com.github.tchx84.Flatseal
 
 if not flatpak install --user -y flathub $flatpak_apps
-    echo "Flatpak installation failed - check parenta control settings" >&2
+    echo "Flatpak installation failed - check parenta control settings or usually it gets solved after reboot" >&2
 end
 
-# Stow configuration files
-stow --ignore='^(install\.sh|install\.fish)$' . -v --adopt
+log 'Installing sddm login page and required plugins for the theme...'
+$aur_helper -S --needed sddm qt6-svg qt6-virtualkeyboard qt6-multimedia-ffmpeg $noconfirm
 
+sudo git clone -b master --depth 1 https://github.com/keyitdev/sddm-astronaut-theme.git /usr/share/sddm/themes/sddm-astronaut-theme
+sudo cp -r /usr/share/sddm/themes/sddm-astronaut-theme/Fonts/* /usr/share/fonts/
+echo "[Theme]
+Current=sddm-astronaut-theme" | sudo tee /etc/sddm.conf
 echo "[General]
-InputMethod=qtvirtualkeyboard
-GreeterEnvironment=QML2_IMPORT_PATH=/usr/share/sddm/themes/silent/components/,QT_IM_MODULE=qtvirtualkeyboard
+InputMethod=qtvirtualkeyboard" | sudo tee /etc/sddm.conf.d/virtualkbd.conf
 
-[Theme]
-Current=silent" | sudo tee /etc/sddm.conf >/dev/null
+log 'Enabling audio services...'
+systemctl --user enable --now pipewire pipewire-pulse wireplumber
+log 'Enabling network, bluetooth and sddm services...'
+sudo systemctl enable --now bluetooth NetworkManager sddm
 
-# Install GRUB theme
-set -l grub_theme_dir "$HOME/.cache/elegant-grub"
-git clone https://github.com/vinceliuice/Elegant-grub2-themes.git $grub_theme_dir
-sudo $grub_theme_dir/install.sh -t mojave
+# Start the shell
+#caelestia shell -d >/dev/null
 
-cat $HOME/.config/fastfetch/ascii.txt
-echo "Installation completed successfully! A reboot is recommended."
-read -l -P "Reboot now? [y/N] " confirm
-if string match -q -i y "$confirm"
-    sudo reboot
-end
+log 'Done!'
