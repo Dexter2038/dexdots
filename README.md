@@ -1,4 +1,4 @@
-# My dotfiles based on [caelestia-dots](https://github.com/caelestia-dots/caelestia)
+# Hyprland dotfiles based on [caelestia-dots](https://github.com/caelestia-dots/caelestia)
 
 <p align="center">
   <img src="preview1.png" width="700" alt="Preview image">
