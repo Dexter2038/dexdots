@@ -1,7 +1,6 @@
-# Hyprland dotfiles based on [caelestia-dots](https://github.com/caelestia-dots/caelestia)
-
 <!--toc:start-->
-- [Hyprland dotfiles based on [caelestia-dots](https://github.com/caelestia-dots/caelestia)](#hyprland-dotfiles-based-on-caelestia-dotshttpsgithubcomcaelestia-dotscaelestia)
+- [Hyprland dotfiles based on caelestia-dots](#hyprland-dotfiles-based-on-caelestia-dots)
+[caelestia-dots](https://github.com/caelestia-dots/caelestia)
   - [Components](#components)
   - [Themes](#themes)
   - [Additional screenshots](#additional-screenshots)
