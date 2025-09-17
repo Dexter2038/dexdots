@@ -213,7 +213,7 @@ if ! test -f $state/caelestia/scheme.json
 end
 
 log 'Installing caelestia optional plugins...'
-$aur_helper -S --needed thunar thunar-archive-plugin thunar-volman thunar-media-tags-plugin gvfs catfish tumbler file-roller engrampa ark xarchiver $noconfirm
+$aur_helper -S --needed nemo nemo-fileroller gvfs udisks2 tumbler nemo-media-columns gvfs-afc gvfs-mtp gvfs-gphoto2 gvfs-nfs gvfs-smb $noconfirm
 $aur_helper -S --needed todoist-appimage $noconfirm
 $aur_helper -S --needed uwsm $noconfirm
 $aur_helper -S --needed gnome-keyring $noconfirm

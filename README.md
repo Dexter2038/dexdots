@@ -15,7 +15,7 @@
 - Tiling window manager: hyprland
 - Audio: pipewire
 - Display manager (login program): sddm
-- File manager: thunar
+- File manager: nemo
 - Network manager: NetworkManager
 - Package manager: paru
 - Terminal: foot
