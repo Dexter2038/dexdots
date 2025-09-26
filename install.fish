@@ -182,6 +182,12 @@ if confirm-overwrite $config/nvim
     ln -s (realpath nvim) $config/nvim
 end
 
+# Shell
+if confirm-overwrite $config/caelestia
+    log 'Installing shell config...'
+    ln -s (realpath caelestia) $config/caelestia
+end
+
 log 'Installing librewolf...'
 $aur_helper -S --needed librewolf-bin hunspell-en_US speech-dispatcher $noconfirm
 
