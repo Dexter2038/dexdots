@@ -1,13 +1,14 @@
 <!--toc:start-->
-- [Hyprland dotfiles based on caelestia-dots](#hyprland-dotfiles-based-on-caelestia-dots)
-[caelestia-dots](https://github.com/caelestia-dots/caelestia)
-  - [Components](#components)
-  - [Themes](#themes)
-  - [Additional screenshots](#additional-screenshots)
+# Hyprland dotfiles
+
+- [Components](#components)
+- [Installation](#installation)
+- [Update](#update)
+- [Uninstallation](#uninstallation)
 <!--toc:end-->
 
 <p align="center">
-  <img src="assets/preview1.png" width="700" alt="Preview image">
+  <img src="assets/preview.png" width="700" alt="Preview image">
 </p>
 
 ## Components
@@ -15,35 +16,42 @@
 - Tiling window manager: hyprland
 - Audio: pipewire
 - Display manager (login program): sddm
-- File manager: nemo
+- File manager: dolphin
 - Network manager: NetworkManager
-- Package manager: paru
-- Terminal: foot
+- Package manager: yay
+- Terminal: kitty
 - Shell: fish
 - Browser: librewolf
 - Editor: neovim
-- Application launcher, status bar: [caelestia-shell](https://github.com/caelestia-dots/shell)
+- Visual environment: [end4-dots-hyprland](https://github.com/end-4/dots-hyprland)
 - Node manager: fnm
 - cd alternative: zoxide (aliased to `cd`)
 - ls alternative: eza (aliased to `ls`)
 
-## Themes
+## Installation
 
-- Sddm: Astronaut theme
+```
+git clone https://github.com/Dexter2038/dexdots $HOME/.dotfiles
+cd $HOME/.dotfiles
+./install.sh
+```
 
-## Additional screenshots
+## Update
 
-<div align="center" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 1200px; margin: 0 auto;">
-  <img src="assets/preview1.png" width="23%" alt="Preview 1">
-  <img src="assets/preview2.png" width="23%" alt="Preview 2">
-  <img src="assets/preview3.png" width="23%" alt="Preview 3">
-  <img src="assets/preview4.png" width="23%" alt="Preview 4">
-  <img src="assets/preview5.png" width="23%" alt="Preview 5">
-  <img src="assets/preview6.png" width="23%" alt="Preview 6">
-  <img src="assets/preview7.png" width="23%" alt="Preview 7">
-  <img src="assets/preview8.png" width="23%" alt="Preview 8">
-  <img src="assets/preview9.png" width="23%" alt="Preview 9">
-  <img src="assets/preview10.png" width="23%" alt="Preview 10">
-  <img src="assets/preview11.png" width="23%" alt="Preview 11">
-  <img src="assets/preview12.png" width="23%" alt="Preview 12">
-</div>
+Why not `update.sh`?
+It is not ready yet.
+
+```
+cd $HOME/.dotfiles
+git pull
+./install.sh
+```
+
+## Uninstallation
+
+Disclaimer: script is kinda destructive because it removes not just installed components but every dependency of them
+
+```
+cd $HOME/.dotfiles
+./uninstall.sh
+```
