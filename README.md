@@ -8,7 +8,8 @@
 <!--toc:end-->
 
 <p align="center">
-  <img src="assets/preview.png" width="700" alt="Preview image">
+  <img src="assets/preview1.png" width="700" alt="Preview image">
+  <img src="assets/preview2.png" width="700" alt="Preview image">
 </p>
 
 ## Components
