@@ -86,6 +86,13 @@ if ((${#pkglist[@]} != 0)); then
   fi
 fi
 
+# Fisher plugins
+fisher install fishingline/safe-rm
+fisher install franciscolourenco/done
+fisher install danhper/fish-fastdir
+fisher install kidonng/zoxide.fish
+fisher install jorgebucaran/autopair.fish
+
 showfun handle-deprecated-dependencies
 v handle-deprecated-dependencies
 
