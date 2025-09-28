@@ -204,6 +204,11 @@ v gsettings set org.gnome.desktop.interface font-name 'Rubik 11'
 v gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 v kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Darkly
 
+v xdg-mime default org.kde.dolphin.desktop inode/directory
+v xdg-settings set default-web-browser librewolf.desktop
+V xdg-mime default librewolf.desktop x-scheme-handler/http
+V xdg-mime default librewolf.desktop x-scheme-handler/https
+
 #####################################################################################
 printf "\e[36m[$0]: 2. Copying + Configuring\e[0m\n"
 
