@@ -6,11 +6,14 @@
 cd "$(dirname "$0")"
 export base="$(pwd)"
 source ./scriptdata/environment-variables
-source ./scriptdata/functions
-source ./scriptdata/installers
+source ./scriptdata/functions.sh
+source ./scriptdata/installers.sh
 prevent_sudo_or_root
 
-if command -v pacman >/dev/null 2>&1;then printf "\e[31m[$0]: pacman found, it seems that the system is ArchLinux or Arch-based distro. Aborting...\e[0m\n";exit 1;fi
+if command -v pacman >/dev/null 2>&1; then
+  printf "\e[31m[$0]: pacman found, it seems that the system is ArchLinux or Arch-based distro. Aborting...\e[0m\n"
+  exit 1
+fi
 v install-Rubik
 v install-Gabarito
 v install-OneUI

@@ -2,15 +2,23 @@
 cd "$(dirname "$0")"
 export base="$(pwd)"
 source ./scriptdata/environment-variables
-source ./scriptdata/functions
-source ./scriptdata/installers
-source ./scriptdata/options
+source ./scriptdata/functions.sh
+source ./scriptdata/installers.sh
+source ./scriptdata/options.sh
 
 #####################################################################################
-if ! command -v pacman >/dev/null 2>&1; then
-  printf "\e[31m[$0]: pacman not found, it seems that the system is not ArchLinux or Arch-based distros. Aborting...\e[0m\n"
+
+if command -v pacman >/dev/null 2>&1; then
+  echo -e "\e[31m[$0]: Arch-based system detected.\e[0m"
+  system=arch
+elif command -v dpkg >/dev/null 2>&1; then
+  echo -e "\e[31m[$0]: Debian-based system detected.\e[0m"
+  system=debian
+else
+  echo -e "\e[31m[$0]: Neither pacman nor dpkg found. Unsupported system.\e[0m"
   exit 1
 fi
+
 prevent_sudo_or_root
 
 startask() {
@@ -21,8 +29,8 @@ startask() {
   printf '      If you aren'\''t running on ewaste, the Quickshell version is recommended. \n'
   printf '      If you would like the AGS version anyway, run the script in its branch instead: git checkout ii-ags && ./install.sh\n'
   printf '\n'
-  printf 'This script: 1. only works for Arch Linux and Arch-based distros.\n'
-  printf '             2. does handle system-level/hardware stuff like Nvidia drivers\n'
+  printf 'This script: 1. only works for Arch Linux, Arch-based, Debian and Debian-based distros.\n'
+  printf '             2. does handle system-level/hardware stuff like Nvidia drivers for Arch Linux\n'
   printf "\e[31m"
 
   printf "Would you like to create a backup for \"$XDG_CONFIG_HOME\" and \"$HOME/.local/\" folders?\n[y/N]: "
@@ -61,57 +69,84 @@ printf "\e[36m[$0]: 1. Get packages and setup user groups/services\n\e[0m"
 # Issue #363
 case $SKIP_SYSUPDATE in
 true) sleep 0 ;;
-*) v sudo pacman -Syu ;;
+*) case $system in
+  arch)
+    # Performing Arch-specific actions...
+    v sudo pacman -Syu
+    ;;
+  debian)
+    # Performing Debian-specific actions...
+    v sudo apt update && sudo apt upgrade
+    ;;
+  esac ;;
 esac
+
+ARCH_DEPLISTFILE=./scriptdata/arch_dependencies.conf
+DEBIAN_DEPLISTFILE=./scriptdata/debian_dependencies.conf
+
+if [[ -z "${DEPLISTFILE:-}" ]]; then
+  case $system in
+  arch) DEPLISTFILE=$ARCH_DEPLISTFILE ;;
+  debian) DEPLISTFILE=$DEBIAN_DEPLISTFILE ;;
+  esac
+fi
 
 remove_bashcomments_emptylines ${DEPLISTFILE} ./cache/dependencies_stripped.conf
 readarray -t pkglist <./cache/dependencies_stripped.conf
 
-# Use yay. Because paru does not support cleanbuild.
-# Also see https://wiki.hyprland.org/FAQ/#how-do-i-update
-if ! command -v yay >/dev/null 2>&1; then
-  echo -e "\e[33m[$0]: \"yay\" not found.\e[0m"
-  showfun install-yay
-  v install-yay
-fi
+case $system in
+arch) # Use yay. Because paru does not support cleanbuild.
+  # Also see https://wiki.hyprland.org/FAQ/#how-do-i-update
+  if ! command -v yay >/dev/null 2>&1; then
+    echo -e "\e[33m[$0]: \"yay\" not found.\e[0m"
+    showfun install-yay
+    v install-yay
+  fi ;;
+debian) ;;
+  # Do nothing
+esac
 
-# Install extra packages from dependencies.conf as declared by the user
+case $system in
+arch)
+  installer_ask="yay -S --needed"
+  installer_noask="yay -S --needed --noconfirm"
+  ;;
+debian)
+  installer_ask="sudo apt-get install"
+  installer_noask="sudo apt-get install -y"
+  ;;
+esac
+
+# Install extra packages from dependency file as declared by the user
 if ((${#pkglist[@]} != 0)); then
   if $ask; then
     # execute per element of the array $pkglist
-    for i in "${pkglist[@]}"; do v yay -S --needed $i; done
+    for i in "${pkglist[@]}"; do v $installer_ask $i; done
   else
     # execute for all elements of the array $pkglist in one line
-    v yay -S --needed --noconfirm ${pkglist[*]}
+    v $installer_noask ${pkglist[*]}
   fi
 fi
 
-# Fisher plugins
-fish -c "
-fisher install fishingline/safe-rm
-fisher install franciscolourenco/done
-fisher install danhper/fish-fastdir
-fisher install kidonng/zoxide.fish
-fisher install jorgebucaran/autopair.fish
-"
+if command -v fish >/dev/null 2>&1; then
+  # Fisher plugins
+  v fish -c "
+  fisher install fishingline/safe-rm
+  fisher install franciscolourenco/done
+  fisher install danhper/fish-fastdir
+  fisher install kidonng/zoxide.fish
+  fisher install jorgebucaran/autopair.fish
+  "
+fi
 
-showfun handle-deprecated-dependencies
-v handle-deprecated-dependencies
-
-# https://github.com/end-4/dots-hyprland/issues/581
-# yay -Bi is kinda hit or miss, instead cd into the relevant directory and manually source and install deps
-install-local-pkgbuild() {
-  local location=$1
-  local installflags=$2
-
-  x pushd $location
-
-  source ./PKGBUILD
-  x yay -S $installflags --asdeps "${depends[@]}"
-  x makepkg -Asi --noconfirm
-
-  x popd
-}
+case $system in
+arch)
+  showfun handle-deprecated-dependencies
+  v handle-deprecated-dependencies
+  ;;
+debian) ;;
+  # Do nothing since it wasn't available before
+esac
 
 # Install core dependencies from the meta-packages
 metapkgs=(./arch-packages/illogical-impulse-{audio,backlight,basic,fonts-themes,kde,portal,python,screencapture,toolkit,widgets})
@@ -121,63 +156,51 @@ metapkgs+=(./arch-packages/illogical-impulse-microtex-git)
 [[ -f /usr/share/icons/Bibata-Modern-Classic/index.theme ]] ||
   metapkgs+=(./arch-packages/illogical-impulse-bibata-modern-classic-bin)
 
-for i in "${metapkgs[@]}"; do
+case $system in
+arch) for i in "${metapkgs[@]}"; do
   metainstallflags="--needed"
-  $ask && showfun install-local-pkgbuild || metainstallflags="$metainstallflags --noconfirm"
-  v install-local-pkgbuild "$i" "$metainstallflags"
-done
-
-# Only for Arch(based) distro.
-install-drivers() {
-  drivers=(mesa-utils libva-utils vulkan-tools vulkan-headers)
-
-  # Add kernel headers
-  kernel_version=$(uname -r)
-  case "$kernel_version" in
-  *-zen*) drivers+=(linux-zen-headers) ;;
-  *-lts*) drivers+=(linux-lts-headers) ;;
-  *-cachyos*) drivers+=(linux-cachyos-headers) ;;
-  *) drivers+=(linux-headers) ;;
-  esac
-
-  # Detect GPU and add drivers
-  gpu_info=$(lspci -nn | grep -Ei "VGA|3D|Display")
-
-  if [[ $gpu_info == *"NVIDIA"* ]]; then
-    drivers+=(libva-nvidia-driver nvidia-utils nvidia-settings nvidia-prime opencl-nvidia)
-    # Choose NVIDIA driver variant
-    if echo "$gpu_info" | grep -q -E "RTX [2-9][0-9]|GTX 16"; then
-      drivers+=("nvidia-open-dkms")
-    else
-      drivers+=("nvidia-dkms")
-    fi
-    # Skip DKMS for CachyOS
-    if [[ "$kernel_version" == *"-cachyos"* ]]; then
-      drivers=("${drivers[@]/nvidia*-dkms/}")
-    fi
+  if $ask; then
+    showfun install-local-pkgbuild
+    metainstallflags="$metainstallflags --noconfirm"
   fi
+  v install-local-pkgbuild "$i" "$metainstallflags"
+done ;;
+debian)
+  echo -e "\e[31m[$0]: Current version of installation script does not handle installation yet, due to not transferred PKGBUILDs to debian compatible ones. Exiting...\e[0m"
+  exit 1
+  # TODO: convert pkgbuilds to debian packages
+  ;;
+esac
 
-  [[ $gpu_info == *"AMD/ATI"* ]] && drivers+=(xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau)
-  [[ $gpu_info == *"Intel"* ]] && drivers+=(libva-intel-driver intel-media-driver vulkan-intel)
+case $system in
+arch) # Install drivers
+  $ask && showfun install-drivers-arch
+  v install-drivers-arch
 
-  x yay -S --needed --noconfirm ${drivers[@]}
-}
-
-# Install drivers
-$ask && showfun install-drivers
-v install-drivers
-
-if hostnamectl chassis | grep -qi "laptop\|notebook"; then
-  laptop_pkgs=(power-profiles-daemon upower powertop)
-  v yay -S --needed --noconfirm ${laptop_pkgs[@]}
-fi
+  if hostnamectl chassis | grep -qi "laptop\|notebook"; then
+    laptop_pkgs=(power-profiles-daemon upower powertop)
+    v yay -S --needed --noconfirm ${laptop_pkgs[@]}
+  fi
+  ;;
+debian) ;;
+  # TODO: add drivers and laptop pkgs installation
+esac
 
 # These python packages are installed using uv, not pacman.
 showfun install-python-packages
 v install-python-packages
 
+case $system in
+arch)
+  plasma_browser_integration=$(pacman -Qs ^plasma-browser-integration)
+  ;;
+debian)
+  plasma_browser_integration=$(dpkg -l ^plasma-browser-integration)
+  ;;
+esac
+
 ## Optional dependencies
-if pacman -Qs ^plasma-browser-integration$; then SKIP_PLASMAINTG=true; fi
+if $plasma_browser_integration; then SKIP_PLASMAINTG=true; fi
 case $SKIP_PLASMAINTG in
 true) sleep 0 ;;
 *)
@@ -190,7 +213,10 @@ true) sleep 0 ;;
     p=y
   fi
   case $p in
-  y) x sudo pacman -S --needed --noconfirm plasma-browser-integration ;;
+  y) case $system in
+    arch) x sudo pacman -S --needed --noconfirm plasma-browser-integration ;;
+    debian) x sudo apt-get install -y plasma-browser-integration ;;
+    esac ;;
   *) echo "Ok, won't install" ;;
   esac
   ;;
@@ -206,8 +232,8 @@ v kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Darkly
 
 v xdg-mime default org.kde.dolphin.desktop inode/directory
 v xdg-settings set default-web-browser librewolf.desktop
-V xdg-mime default librewolf.desktop x-scheme-handler/http
-V xdg-mime default librewolf.desktop x-scheme-handler/https
+v xdg-mime default librewolf.desktop x-scheme-handler/http
+v xdg-mime default librewolf.desktop x-scheme-handler/https
 
 #####################################################################################
 printf "\e[36m[$0]: 2. Copying + Configuring\e[0m\n"

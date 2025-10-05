@@ -23,7 +23,7 @@ install-yay() {
 }
 
 # Not for Arch(based) distro.
-install-agsv1 (){
+install-agsv1() {
   x mkdir -p $base/cache/agsv1
   x cd $base/cache/agsv1
   try git init -b main
@@ -39,43 +39,43 @@ install-agsv1 (){
 }
 
 # Not for Arch(based) distro.
-install-Rubik (){
+install-Rubik() {
   x mkdir -p $base/cache/Rubik
   x cd $base/cache/Rubik
   try git init -b main
   try git remote add origin https://github.com/googlefonts/rubik.git
   x git pull origin main && git submodule update --init --recursive
-	x sudo mkdir -p /usr/local/share/fonts/TTF/
-	x sudo cp fonts/variable/Rubik*.ttf /usr/local/share/fonts/TTF/
-	x sudo mkdir -p /usr/local/share/licenses/ttf-rubik/
-	x sudo cp OFL.txt /usr/local/share/licenses/ttf-rubik/LICENSE
+  x sudo mkdir -p /usr/local/share/fonts/TTF/
+  x sudo cp fonts/variable/Rubik*.ttf /usr/local/share/fonts/TTF/
+  x sudo mkdir -p /usr/local/share/licenses/ttf-rubik/
+  x sudo cp OFL.txt /usr/local/share/licenses/ttf-rubik/LICENSE
   x fc-cache -fv
   x gsettings set org.gnome.desktop.interface font-name 'Rubik 11'
   x cd $base
 }
 
 # Not for Arch(based) distro.
-install-Gabarito (){
+install-Gabarito() {
   x mkdir -p $base/cache/Gabarito
   x cd $base/cache/Gabarito
   try git init -b main
   try git remote add origin https://github.com/naipefoundry/gabarito.git
   x git pull origin main && git submodule update --init --recursive
-	x sudo mkdir -p /usr/local/share/fonts/TTF/
-	x sudo cp fonts/ttf/Gabarito*.ttf /usr/local/share/fonts/TTF/
-	x sudo mkdir -p /usr/local/share/licenses/ttf-gabarito/
-	x sudo cp OFL.txt /usr/local/share/licenses/ttf-gabarito/LICENSE
+  x sudo mkdir -p /usr/local/share/fonts/TTF/
+  x sudo cp fonts/ttf/Gabarito*.ttf /usr/local/share/fonts/TTF/
+  x sudo mkdir -p /usr/local/share/licenses/ttf-gabarito/
+  x sudo cp OFL.txt /usr/local/share/licenses/ttf-gabarito/LICENSE
   x fc-cache -fv
   x cd $base
 }
 
 # Not for Arch(based) distro.
-install-OneUI (){
+install-OneUI() {
   x mkdir -p $base/cache/OneUI4-Icons
   x cd $base/cache/OneUI4-Icons
   try git init -b main
   try git remote add origin https://github.com/end-4/OneUI4-Icons.git
-# try git remote add origin https://github.com/mjkim0727/OneUI4-Icons.git
+  # try git remote add origin https://github.com/mjkim0727/OneUI4-Icons.git
   x git pull origin main && git submodule update --init --recursive
   x sudo mkdir -p /usr/local/share/icons
   x sudo cp -r OneUI /usr/local/share/icons
@@ -85,7 +85,7 @@ install-OneUI (){
 }
 
 # Not for Arch(based) distro.
-install-bibata (){
+install-bibata() {
   x mkdir -p $base/cache/bibata-cursor
   x cd $base/cache/bibata-cursor
   name="Bibata-Modern-Classic"
@@ -99,7 +99,7 @@ install-bibata (){
 }
 
 # Not for Arch(based) distro.
-install-MicroTeX (){
+install-MicroTeX() {
   x mkdir -p $base/cache/MicroTeX
   x cd $base/cache/MicroTeX
   try git init -b master
@@ -109,19 +109,19 @@ install-MicroTeX (){
   x cd build
   x cmake ..
   x make -j32
-	x sudo mkdir -p /opt/MicroTeX
+  x sudo mkdir -p /opt/MicroTeX
   x sudo cp ./LaTeX /opt/MicroTeX/
   x sudo cp -r ./res /opt/MicroTeX/
   x cd $base
 }
 
 # Not for Arch(based) distro.
-install-uv (){
+install-uv() {
   x bash <(curl -LJs "https://astral.sh/uv/install.sh")
 }
 
 # Both for Arch(based) and other distros.
-install-python-packages (){
+install-python-packages() {
   UV_NO_MODIFY_PATH=1
   ILLOGICAL_IMPULSE_VIRTUAL_ENV=$XDG_STATE_HOME/quickshell/.venv
   x mkdir -p $(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)
@@ -133,19 +133,71 @@ install-python-packages (){
 }
 
 # Only for Arch(based) distro.
-handle-deprecated-dependencies (){
+install-drivers-arch() {
+  drivers=(mesa-utils libva-utils vulkan-tools vulkan-headers)
+
+  # Add kernel headers
+  kernel_version=$(uname -r)
+  case "$kernel_version" in
+  *-zen*) drivers+=(linux-zen-headers) ;;
+  *-lts*) drivers+=(linux-lts-headers) ;;
+  *-cachyos*) drivers+=(linux-cachyos-headers) ;;
+  *) drivers+=(linux-headers) ;;
+  esac
+
+  # Detect GPU and add drivers
+  gpu_info=$(lspci -nn | grep -Ei "VGA|3D|Display")
+
+  if [[ $gpu_info == *"NVIDIA"* ]]; then
+    drivers+=(libva-nvidia-driver nvidia-utils nvidia-settings nvidia-prime opencl-nvidia)
+    # Choose NVIDIA driver variant
+    if echo "$gpu_info" | grep -q -E "RTX [2-9][0-9]|GTX 16"; then
+      drivers+=("nvidia-open-dkms")
+    else
+      drivers+=("nvidia-dkms")
+    fi
+    # Skip DKMS for CachyOS
+    if [[ "$kernel_version" == *"-cachyos"* ]]; then
+      drivers=("${drivers[@]/nvidia*-dkms/}")
+    fi
+  fi
+
+  [[ $gpu_info == *"AMD/ATI"* ]] && drivers+=(xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau)
+  [[ $gpu_info == *"Intel"* ]] && drivers+=(libva-intel-driver intel-media-driver vulkan-intel)
+
+  x yay -S --needed --noconfirm ${drivers[@]}
+}
+
+# Only for Arch(based) distro.
+handle-deprecated-dependencies() {
   printf "\e[36m[$0]: Removing deprecated dependencies:\e[0m\n"
-  for i in illogical-impulse-{microtex,pymyc-aur,ags,agsv1} {hyprutils,hyprpicker,hyprlang,hypridle,hyprland-qt-support,hyprland-qtutils,hyprlock,xdg-desktop-portal-hyprland,hyprcursor,hyprwayland-scanner,hyprland}-git;do try sudo pacman --noconfirm -Rdd $i;done
-# Convert old dependencies to non explicit dependencies so that they can be orphaned if not in meta packages
-	remove_bashcomments_emptylines ./scriptdata/previous_dependencies.conf ./cache/old_deps_stripped.conf
-	readarray -t old_deps_list < ./cache/old_deps_stripped.conf
-	pacman -Qeq > ./cache/pacman_explicit_packages
-	readarray -t explicitly_installed < ./cache/pacman_explicit_packages
+  for i in illogical-impulse-{microtex,pymyc-aur,ags,agsv1} {hyprutils,hyprpicker,hyprlang,hypridle,hyprland-qt-support,hyprland-qtutils,hyprlock,xdg-desktop-portal-hyprland,hyprcursor,hyprwayland-scanner,hyprland}-git; do try sudo pacman --noconfirm -Rdd $i; done
+  # Convert old dependencies to non explicit dependencies so that they can be orphaned if not in meta packages
+  remove_bashcomments_emptylines ./scriptdata/previous_dependencies.conf ./cache/old_deps_stripped.conf
+  readarray -t old_deps_list <./cache/old_deps_stripped.conf
+  pacman -Qeq >./cache/pacman_explicit_packages
+  readarray -t explicitly_installed <./cache/pacman_explicit_packages
 
-	echo "Attempting to set previously explicitly installed deps as implicit..."
-	for i in "${explicitly_installed[@]}"; do for j in "${old_deps_list[@]}"; do
-		[ "$i" = "$j" ] && yay -D --asdeps "$i"
-	done; done
+  echo "Attempting to set previously explicitly installed deps as implicit..."
+  for i in "${explicitly_installed[@]}"; do for j in "${old_deps_list[@]}"; do
+    [ "$i" = "$j" ] && yay -D --asdeps "$i"
+  done; done
 
-	return 0
+  return 0
+}
+
+# Only for Arch(based) distro.
+# https://github.com/end-4/dots-hyprland/issues/581
+# yay -Bi is kinda hit or miss, instead cd into the relevant directory and manually source and install deps
+install-local-pkgbuild() {
+  local location=$1
+  local installflags=$2
+
+  x pushd $location
+
+  source ./PKGBUILD
+  x yay -S $installflags --asdeps "${depends[@]}"
+  x makepkg -Asi --noconfirm
+
+  x popd
 }

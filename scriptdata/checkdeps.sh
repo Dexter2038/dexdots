@@ -7,15 +7,15 @@ set -e
 cd "$(dirname "$0")"
 cd ..
 export base="$(pwd)"
-source ./scriptdata/functions
-source ./scriptdata/installers
+source ./scriptdata/functions.sh
+source ./scriptdata/installers.sh
 
 pkglistfile=$(mktemp)
 pkglistfile_orig=./scriptdata/dependencies.conf
 pkglistfile_orig_s=./cache/dependencies_stripped.conf
 remove_bashcomments_emptylines $pkglistfile_orig $pkglistfile_orig_s
 
-cat $pkglistfile_orig_s | sed "s_\ _\n_g" > $pkglistfile
+cat $pkglistfile_orig_s | sed "s_\ _\n_g" >$pkglistfile
 
 echo "The non-existent pkgs in $pkglistfile_orig are listed as follows."
 # Borrowed from https://bbs.archlinux.org/viewtopic.php?pid=1490795#p1490795
