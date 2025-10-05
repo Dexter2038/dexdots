@@ -191,13 +191,30 @@ handle-deprecated-dependencies() {
 # yay -Bi is kinda hit or miss, instead cd into the relevant directory and manually source and install deps
 install-local-pkgbuild() {
   local location=$1
-  local installflags=$2
 
   x pushd $location
 
   source ./PKGBUILD
-  x yay -S $installflags --asdeps "${depends[@]}"
+  x yay -S --needed --noconfirm --asdeps "${depends[@]}"
   x makepkg -Asi --noconfirm
 
   x popd
+}
+
+install-dependencies-arch() {
+  # Install core dependencies from the meta-packages
+  metapkgs=(./arch-packages/illogical-impulse-{audio,backlight,basic,fonts-themes,kde,portal,python,screencapture,toolkit,widgets})
+  metapkgs+=(./arch-packages/illogical-impulse-hyprland)
+  metapkgs+=(./arch-packages/illogical-impulse-microtex-git)
+  # metapkgs+=(./arch-packages/illogical-impulse-oneui4-icons-git)
+  [[ -f /usr/share/icons/Bibata-Modern-Classic/index.theme ]] ||
+    metapkgs+=(./arch-packages/illogical-impulse-bibata-modern-classic-bin)
+
+  for i in "${metapkgs[@]}"; do
+    x install-local-pkgbuild "$i"
+  done
+}
+
+install-dependencies-debian() {
+  todo=1
 }
