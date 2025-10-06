@@ -1,7 +1,3 @@
-# This file is provided for non-Arch(based) distros.
-# As for Arch Linux, we use local PKGBUILDs or AUR packages, which is the "right" way compared to copying files directly into /usr/local/* .
-# P.S. install-yay() should be kept for Arch(based) distros.
-
 # This script depends on `functions' .
 # This is NOT a script for execution, but for loading functions, so NOT need execution permission or shebang.
 # NOTE that you NOT need to `cd ..' because the `$0' is NOT this file, but the script file which will source this file.
@@ -9,6 +5,8 @@
 # The script that use this file should have two lines on its top as follows:
 # cd "$(dirname "$0")"
 # export base="$(pwd)"
+
+source ./builders.sh
 
 # Only for Arch(based) distro.
 install-yay() {
@@ -216,5 +214,5 @@ install-dependencies-arch() {
 }
 
 install-dependencies-debian() {
-  todo=1
+  build-hyprland
 }
