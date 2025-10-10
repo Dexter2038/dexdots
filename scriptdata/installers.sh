@@ -213,6 +213,234 @@ install-dependencies-arch() {
   done
 }
 
+function install-adw-gtk3-theme {
+  local VERSION="2024-10-25"
+  local DOWNLOAD_URL="https://github.com/ronny-rentner/adwaita-gtk3-gtk4-theme/releases/download/nightly-${VERSION}/adw-gtk3-gtk4-${VERSION}.tgz"
+  local TARBALL="adw-gtk3-gtk4-${VERSION}.tgz"
+  local EXTRACT_DIR="adw-gtk3-gtk4-${VERSION}"
+
+  echo -e "\e[34m[$0]: Installing ADW-GTK3 theme...\e[0m"
+
+  # Download the tarball
+  if [[ -f "$TARBALL" ]]; then
+    echo -e "\e[33m[$0]: Tarball already exists, skipping download.\e[0m"
+  else
+    if command -v wget &>/dev/null; then
+      x wget -O "$TARBALL" "$DOWNLOAD_URL"
+    elif command -v curl &>/dev/null; then
+      x curl -L -o "$TARBALL" "$DOWNLOAD_URL"
+    else
+      echo -e "\e[31mError: Neither wget nor curl found. Please install one of them.\e[0m"
+      return 1
+    fi
+  fi
+
+  # Extract and install
+  x tar -xzf "$TARBALL"
+  x mkdir -p ~/.local/share/themes
+  x cp -r "$EXTRACT_DIR" ~/.local/share/themes/adw-gtk3
+
+  echo -e "\e[34m[$0]: ADW-GTK3 theme installed successfully!\e[0m"
+}
+
+function install-darkly-theme {
+  local VERSION="0.5.23"
+  local DOWNLOAD_URL="https://github.com/Bali10050/Darkly/archive/refs/tags/v${VERSION}.tar.gz"
+  local TARBALL="darkly-${VERSION}.tar.gz"
+  local EXTRACT_DIR="Darkly-${VERSION}"
+
+  echo -e "\e[34m[$0]: Installing Darkly theme...\e[0m"
+
+  # Download the tarball
+  if [[ -f "$TARBALL" ]]; then
+    echo -e "\e[33m[$0]: Tarball already exists, skipping download.\e[0m"
+  else
+    if command -v wget &>/dev/null; then
+      x wget -O "$TARBALL" "$DOWNLOAD_URL"
+    elif command -v curl &>/dev/null; then
+      x curl -L -o "$TARBALL" "$DOWNLOAD_URL"
+    else
+      echo -e "\e[31mError: Neither wget nor curl found. Please install one of them.\e[0m"
+      return 1
+    fi
+  fi
+
+  # Extract and install
+  x tar -xzf "$TARBALL"
+  x pushd "$EXTRACT_DIR"
+  x ./install.sh
+  x popd
+
+  echo -e "\e[34m[$0]: Darkly theme installed successfully!\e[0m"
+}
+
+function install-nerd-fonts-jetbrains-mono {
+  local VERSION="3.4.0"
+  local DOWNLOAD_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v${VERSION}/JetBrainsMono.tar.xz"
+  local TARBALL="JetBrainsMono-${VERSION}.tar.xz"
+
+  echo -e "\e[34m[$0]: Installing JetBrains Mono Nerd Font...\e[0m"
+
+  # Download the tarball
+  if [[ -f "$TARBALL" ]]; then
+    echo -e "\e[33m[$0]: Tarball already exists, skipping download.\e[0m"
+  else
+    if command -v wget &>/dev/null; then
+      x wget -O "$TARBALL" "$DOWNLOAD_URL"
+    elif command -v curl &>/dev/null; then
+      x curl -L -o "$TARBALL" "$DOWNLOAD_URL"
+    else
+      echo -e "\e[31mError: Neither wget nor curl found. Please install one of them.\e[0m"
+      return 1
+    fi
+  fi
+
+  # Extract to fonts directory
+  x mkdir -p ~/.local/share/fonts
+  x tar -xf "$TARBALL" -C ~/.local/share/fonts
+  x fc-cache -fv
+
+  echo -e "\e[34m[$0]: JetBrains Mono Nerd Font installed successfully!\e[0m"
+}
+
+function install-kde-material-you-colors {
+  echo -e "\e[34m[$0]: Installing KDE Material You Colors...\e[0m"
+
+  # Install pipx if not available
+  if ! command -v pipx &>/dev/null; then
+    echo -e "\e[33m[$0]: pipx not found, installing...\e[0m"
+    x sudo apt update
+    x sudo apt install -y pipx
+    x pipx ensurepath
+  fi
+
+  # Install dependencies
+  echo -e "\e[34m[$0]: Installing build dependencies...\e[0m"
+  x sudo apt install -y gcc python3-dbus libglib2.0-dev python3-dev
+
+  # Install the package
+  x pipx install kde-material-you-colors
+  x pipx inject kde-material-you-colors pywal16
+
+  echo -e "\e[34m[$0]: KDE Material You Colors installed successfully!\e[0m"
+}
+
+function install-matugen {
+  echo -e "\e[34m[$0]: Installing Matugen...\e[0m"
+
+  # Install Rust if not available
+  if ! command -v cargo &>/dev/null; then
+    echo -e "\e[33m[$0]: Rust/Cargo not found, installing...\e[0m"
+    x sudo apt update
+    x sudo apt install -y rustup
+    x source ~/.cargo/env
+    x rustup default stable
+  fi
+
+  # Install matugen
+  x cargo install matugen
+
+  echo -e "\e[34m[$0]: Matugen installed successfully!\e[0m"
+}
+
+function install-translate-shell {
+  echo -e "\e[34m[$0]: Installing translate-shell...\e[0m"
+
+  # Install recommended dependencies for full functionality
+  echo -e "\e[34m[$0]: Installing recommended dependencies for translate-shell...\e[0m"
+  x sudo apt update
+  x sudo apt install -y \
+    curl \
+    libfribidi-dev \
+    mplayer \
+    mpv \
+    mpg123 \
+    espeak \
+    less \
+    rlwrap \
+    aspell \
+    aspell-en \
+    hunspell \
+    hunspell-en-us
+
+  # Download the self-contained executable
+  echo -e "\e[34m[$0]: Downloading translate-shell executable...\e[0m"
+  if command -v wget &>/dev/null; then
+    x wget -O trans "https://git.io/trans"
+  elif command -v curl &>/dev/null; then
+    x curl -L -o trans "https://git.io/trans"
+  else
+    echo -e "\e[31mError: Neither wget nor curl found. Please install one of them.\e[0m"
+    return 1
+  fi
+
+  # Make executable and install system-wide
+  x chmod +x trans
+  x sudo mv trans /usr/local/bin/
+
+  echo -e "\e[34m[$0]: translate-shell installed successfully!\e[0m"
+  echo -e "\e[34m[$0]: Usage: trans 'Hello world' -t es\e[0m"
+}
+
 install-dependencies-debian() {
-  build-hyprland
+  echo -e "\e[34m[$0]: Starting Debian dependencies installation...\e[0m"
+
+  echo -e "\e[34m[$0]: Updating package lists...\e[0m"
+  x sudo apt update
+
+  echo -e "\e[34m[$0]: Installing audio dependencies (cava, pavucontrol-qt, wireplumber, libdbusmenu-gtk3-4, playerctl)...\e[0m"
+  x sudo apt install -y cava pavucontrol-qt wireplumber libdbusmenu-gtk3-4 playerctl
+
+  echo -e "\e[34m[$0]: Installing backlight dependencies (geoclue, brightnessctl, ddcutil)...\e[0m"
+  x sudo apt install -y geoclue brightnessctl ddcutil
+
+  echo -e "\e[34m[$0]: Installing basic dependencies (axel, bc, coreutils, cliphist, cmake, curl, rsync, wget, ripgrep, jq, meson, xdg-user-dirs)...\e[0m"
+  x sudo apt install -y axel bc coreutils cliphist cmake curl rsync wget ripgrep jq meson xdg-user-dirs
+
+  echo -e "\e[34m[$0]: Installing font and theme base packages (breeze, eza, fish, fontconfig, kitty, starship)...\e[0m"
+  x sudo apt install -y breeze eza fish fontconfig kitty starship
+
+  echo -e "\e[34m[$0]: Installing ADW-GTK3 theme...\e[0m"
+  x install-adw-gtk3-theme
+
+  echo -e "\e[34m[$0]: Installing Darkly theme...\e[0m"
+  x install-darkly-theme
+
+  echo -e "\e[34m[$0]: Installing JetBrains Mono Nerd Font...\e[0m"
+  x install-nerd-fonts-jetbrains-mono
+
+  echo -e "\e[34m[$0]: Installing KDE Material You Colors...\e[0m"
+  x install-kde-material-you-colors
+
+  echo -e "\e[34m[$0]: Installing Matugen...\e[0m"
+  x install-matugen
+
+  echo -e "\e[34m[$0]: Installing KDE dependencies (bluedevil, gnome-keyring, network-manager, plasma-nm, polkit-kde-agent-1, dolphin, systemsettings)...\e[0m"
+  x sudo apt install -y bluedevil gnome-keyring network-manager plasma-nm polkit-kde-agent-1 dolphin systemsettings
+
+  echo -e "\e[34m[$0]: Installing portal dependencies (xdg-desktop-portal, xdg-desktop-portal-kde, xdg-desktop-portal-gtk)...\e[0m"
+  x sudo apt install -y xdg-desktop-portal xdg-desktop-portal-kde xdg-desktop-portal-gtk
+
+  echo -e "\e[34m[$0]: Installing Python and development dependencies (clang, GTK4, libadwaita, libsoup3, libportal-gtk4, gobject-introspection, sassc, python3-opencv)...\e[0m"
+  x sudo apt install -y clang libgtk-4-dev libadwaita-1-dev libsoup-3.0-dev libportal-gtk4-dev gobject-introspection libgirepository1.0-dev sassc python3-opencv
+
+  echo -e "\e[34m[$0]: Installing uv (Python package manager)...\e[0m"
+  x curl -LsSf https://astral.sh/uv/install.sh | sh
+
+  echo -e "\e[34m[$0]: Installing screencapture dependencies (slurp, swappy, tesseract-ocr, tesseract-ocr-eng, wf-recorder)...\e[0m"
+  x sudo apt install -y slurp swappy tesseract-ocr tesseract-ocr-eng wf-recorder
+
+  echo -e "\e[34m[$0]: Installing toolkit dependencies (kdialog, Qt6 components, syntax-highlighting, upower, wtype, ydotool)...\e[0m"
+  x sudo apt install -y kdialog qt6-5compat-dev qt6-avif-image-plugin qt6-base-dev qt6-declarative-dev qt6-image-formats-plugins qt6-multimedia-dev qt6-positioning-dev qt6-quicktimeline-dev qt6-sensors-dev qt6-svg-dev qt6-tools-dev qt6-translations qt6-virtualkeyboard-dev qt6-wayland-dev libkf6syntaxhighlighting-dev upower wtype ydotool
+
+  echo -e "\e[34m[$0]: Installing widget dependencies (network-manager-applet, fuzzel, glib2, wlogout)...\e[0m"
+  x sudo apt install -y network-manager-applet fuzzel libglib2.0-bin wlogout
+
+  echo -e "\e[34m[$0]: Installing translate-shell...\e[0m"
+  x install-translate-shell
+
+  echo -e "\e[34m[$0]: Building Hyprland and all components...\e[0m"
+  x build-hyprland
+
+  echo -e "\e[34m[$0]: Debian dependencies installation completed successfully!\e[0m"
 }

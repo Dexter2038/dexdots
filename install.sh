@@ -154,10 +154,8 @@ arch)
   v install-dependencies-arch
   ;;
 debian)
-  echo -e "\e[31m[$0]: Current version of installation script does not handle installation yet, due to not transferred PKGBUILDs to debian compatible ones. Exiting...\e[0m"
-  exit 1
-  # TODO: convert pkgbuilds to debian packages
-  install-dependencies-debian
+  $ask && showfun install-dependencies-debian
+  v install-dependencies-debian
   ;;
 esac
 
@@ -172,7 +170,7 @@ arch) # Install drivers
   fi
   ;;
 debian) ;;
-  # TODO: add drivers and laptop pkgs installation
+  # TODO: add drivers and laptop pkgs installation (maybe)
 esac
 
 # These python packages are installed using uv, not pacman.
@@ -220,7 +218,7 @@ v gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 v kwriteconfig6 --file kdeglobals --group KDE --key widgetStyle Darkly
 
 v xdg-mime default org.kde.dolphin.desktop inode/directory
-v xdg-settings set default-web-browser librewolf.desktop
+#v xdg-settings set default-web-browser librewolf.desktop
 v xdg-mime default librewolf.desktop x-scheme-handler/http
 v xdg-mime default librewolf.desktop x-scheme-handler/https
 
