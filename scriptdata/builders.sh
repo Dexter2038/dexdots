@@ -6,8 +6,14 @@
 # cd "$(dirname "$0")"
 # export base="$(pwd)"
 
-build-hyprland() {
+function build-hyprland() {
   echo -e "\e[34m[$0]: Starting hyprland ecosystem build...\e[0m"
+
+  echo -e "\e[34m[$0]: Building Hyprutils (utility library)...\e[0m"
+  x build-hyprutils
+
+  echo -e "\e[34m[$0]: Building Hyprwayland-scanner (Wayland protocol scanner)...\e[0m"
+  x build-hyprwayland-scanner
 
   echo -e "\e[34m[$0]: Building Aquamarine (Hyprland's window management library)...\e[0m"
   x build-aquamarine
@@ -18,14 +24,8 @@ build-hyprland() {
   echo -e "\e[34m[$0]: Building Hyprcursor (cursor theme library)...\e[0m"
   x build-hyprcursor
 
-  echo -e "\e[34m[$0]: Building Hyprutils (utility library)...\e[0m"
-  x build-hyprutils
-
   echo -e "\e[34m[$0]: Building Hyprgraphics (graphics rendering library)...\e[0m"
   x build-hyprgraphics
-
-  echo -e "\e[34m[$0]: Building Hyprwayland-scanner (Wayland protocol scanner)...\e[0m"
-  x build-hyprwayland-scanner
 
   echo -e "\e[34m[$0]: Building Hyprland-protocols (Wayland protocols)...\e[0m"
   x build-hyprland-protocols
@@ -58,7 +58,99 @@ build-hyprland() {
   x sudo apt update
   x sudo apt install -y wl-clipboard
 
+  echo -e "\e[34m[$0]: Building Hyprland itself...\e[0m"
+  x build-hyprland-main
+
   echo -e "\e[34m[$0]: Hyprland ecosystem build completed successfully!\e[0m"
+}
+
+function build-hyprland-main {
+  local VERSION="0.51.1"
+  local DOWNLOAD_URL="https://github.com/hyprwm/Hyprland/archive/refs/tags/v${VERSION}.tar.gz"
+  local TARBALL="hyprland-${VERSION}.tar.gz"
+  local EXTRACT_DIR="Hyprland-${VERSION}"
+
+  echo -e "\e[34m[$0]: Building Hyprland main compositor...\e[0m"
+
+  # Install build dependencies
+  echo -e "\e[34m[$0]: Installing Hyprland build dependencies...\e[0m"
+  x sudo apt update
+  x sudo apt install -y \
+    cmake \
+    build-essential \
+    git \
+    pkg-config \
+    libwayland-dev \
+    wayland-protocols \
+    libxkbcommon-dev \
+    libinput-dev \
+    libdrm-dev \
+    libgbm-dev \
+    libudev-dev \
+    libpixman-1-dev \
+    libxcb1-dev \
+    libxcb-composite0-dev \
+    libxcb-xinput-dev \
+    libxcb-randr0-dev \
+    libxcb-icccm4-dev \
+    libxcb-cursor-dev \
+    libxcb-xfixes0-dev \
+    libxcb-xinerama0-dev \
+    libxcb-shm0-dev \
+    libxcb-present-dev \
+    libxcb-damage0-dev \
+    libvulkan-dev \
+    libegl-dev \
+    libgles2 \
+    libglvnd-dev \
+    libsystemd-dev \
+    liblcms2-dev \
+    libdisplay-info-dev \
+    hwdata \
+    libseat-dev \
+    libliftoff-dev \
+    libx11-dev
+
+  # Download the tarball
+  if [[ -f "$TARBALL" ]]; then
+    echo -e "\e[33m[$0]: Tarball already exists, skipping download.\e[0m"
+  else
+    if command -v wget &>/dev/null; then
+      x wget -O "$TARBALL" "$DOWNLOAD_URL"
+    elif command -v curl &>/dev/null; then
+      x curl -L -o "$TARBALL" "$DOWNLOAD_URL"
+    else
+      echo -e "\e[31mError: Neither wget nor curl found. Please install one of them.\e[0m"
+      return 1
+    fi
+  fi
+
+  # Extract the tarball
+  if [[ -d "$EXTRACT_DIR" ]]; then
+    echo -e "\e[33m[$0]: Directory already exists, skipping extraction.\e[0m"
+  else
+    x tar -xzf "$TARBALL"
+  fi
+
+  # Change to the extracted directory and build
+  x pushd "$EXTRACT_DIR"
+
+  # Configure build
+  echo -e "\e[34m[$0]: Configuring Hyprland build...\e[0m"
+  x cmake -DCMAKE_BUILD_TYPE=Release -B build
+
+  # Compile
+  echo -e "\e[34m[$0]: Compiling Hyprland...\e[0m"
+  x cmake --build build --config Release -j$(nproc 2>/dev/null || getconf _NPROCESSORS_CONF)
+
+  # Install system-wide
+  echo -e "\e[34m[$0]: Installing Hyprland system-wide...\e[0m"
+  x sudo cmake --install build
+
+  # Return to original directory
+  x popd
+
+  echo -e "\e[34m[$0]: Hyprland main compositor build and installation completed successfully!\e[0m"
 }
 
 function build-aquamarine {
@@ -68,6 +160,21 @@ function build-aquamarine {
   local EXTRACT_DIR="aquamarine-${VERSION}"
 
   echo -e "\e[34m[$0]: Starting aquamarine build...\e[0m"
+
+  # Install build dependencies
+  echo -e "\e[34m[$0]: Installing aquamarine build dependencies...\e[0m"
+  x sudo apt update
+  x sudo apt install -y \
+    libseat-dev \
+    libinput-dev \
+    libwayland-dev \
+    wayland-protocols \
+    libdrm-dev \
+    libgbm-dev \
+    libudev-dev \
+    libdisplay-info-dev \
+    hwdata \
+    libpixman-1-dev
 
   # Download the tarball
   if [[ -f "$TARBALL" ]]; then
@@ -503,7 +610,17 @@ function build-hyprland-qtutils {
   # Install Qt6 dependencies (if not already installed from hyprland-qt-support)
   echo -e "\e[34m[$0]: Installing Qt6 dependencies...\e[0m"
   x sudo apt update
-  x sudo apt install -y qt6-base-dev qt6-declarative-dev
+  x sudo apt install -y qt6-base-dev qt6-declarative-dev qt6-wayland-dev qt6-wayland-private-dev
+
+  # Check Qt6 version and create symlink if needed
+  echo -e "\e[34m[$0]: Checking Qt6 version and fixing include paths...\e[0m"
+  local QT_VERSION=$(pkg-config --modversion Qt6Core)
+  local QT_WAYLAND_PATH="/usr/include/x86_64-linux-gnu/qt6/QtWaylandClient"
+
+  if [[ -d "$QT_WAYLAND_PATH" && ! -d "$QT_WAYLAND_PATH/$QT_VERSION" ]]; then
+    echo -e "\e[33m[$0]: Creating version symlink for QtWaylandClient ($QT_VERSION)...\e[0m"
+    x sudo ln -sf "$QT_WAYLAND_PATH" "$QT_WAYLAND_PATH/$QT_VERSION"
+  fi
 
   # Download the tarball
   if [[ -f "$TARBALL" ]]; then

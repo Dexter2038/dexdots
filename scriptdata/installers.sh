@@ -6,7 +6,7 @@
 # cd "$(dirname "$0")"
 # export base="$(pwd)"
 
-source ./builders.sh
+source ./scriptdata/builders.sh
 
 # Only for Arch(based) distro.
 install-yay() {
@@ -217,7 +217,6 @@ function install-adw-gtk3-theme {
   local VERSION="2024-10-25"
   local DOWNLOAD_URL="https://github.com/ronny-rentner/adwaita-gtk3-gtk4-theme/releases/download/nightly-${VERSION}/adw-gtk3-gtk4-${VERSION}.tgz"
   local TARBALL="adw-gtk3-gtk4-${VERSION}.tgz"
-  local EXTRACT_DIR="adw-gtk3-gtk4-${VERSION}"
 
   echo -e "\e[34m[$0]: Installing ADW-GTK3 theme...\e[0m"
 
@@ -237,8 +236,16 @@ function install-adw-gtk3-theme {
 
   # Extract and install
   x tar -xzf "$TARBALL"
+
+  # Create themes directory
   x mkdir -p ~/.local/share/themes
-  x cp -r "$EXTRACT_DIR" ~/.local/share/themes/adw-gtk3
+
+  # Copy both light and dark themes
+  echo -e "\e[34m[$0]: Installing ADW-GTK3 light theme...\e[0m"
+  x cp -r adw-gtk3/ ~/.local/share/themes/
+
+  echo -e "\e[34m[$0]: Installing ADW-GTK3 dark theme...\e[0m"
+  x cp -r adw-gtk3-dark/ ~/.local/share/themes/
 
   echo -e "\e[34m[$0]: ADW-GTK3 theme installed successfully!\e[0m"
 }
@@ -250,6 +257,9 @@ function install-darkly-theme {
   local EXTRACT_DIR="Darkly-${VERSION}"
 
   echo -e "\e[34m[$0]: Installing Darkly theme...\e[0m"
+
+  echo -e "\e[34m[$0]: Installing build dependencies (ECM, Qt5, Qt6)...\e[0m"
+  x sudo apt install -y extra-cmake-modules cmake qt6-base-dev qt6-declarative-dev qt5-default qtdeclarative5-dev
 
   # Download the tarball
   if [[ -f "$TARBALL" ]]; then
@@ -316,7 +326,7 @@ function install-kde-material-you-colors {
 
   # Install dependencies
   echo -e "\e[34m[$0]: Installing build dependencies...\e[0m"
-  x sudo apt install -y gcc python3-dbus libglib2.0-dev python3-dev
+  x sudo apt install -y gcc python3-dbus libglib2.0-dev python3-dev libdbus-1-dev libdbus-glib-1-dev
 
   # Install the package
   x pipx install kde-material-you-colors
@@ -333,7 +343,6 @@ function install-matugen {
     echo -e "\e[33m[$0]: Rust/Cargo not found, installing...\e[0m"
     x sudo apt update
     x sudo apt install -y rustup
-    x source ~/.cargo/env
     x rustup default stable
   fi
 
@@ -392,7 +401,7 @@ install-dependencies-debian() {
   x sudo apt install -y cava pavucontrol-qt wireplumber libdbusmenu-gtk3-4 playerctl
 
   echo -e "\e[34m[$0]: Installing backlight dependencies (geoclue, brightnessctl, ddcutil)...\e[0m"
-  x sudo apt install -y geoclue brightnessctl ddcutil
+  x sudo apt install -y geoclue-2.0 brightnessctl ddcutil
 
   echo -e "\e[34m[$0]: Installing basic dependencies (axel, bc, coreutils, cliphist, cmake, curl, rsync, wget, ripgrep, jq, meson, xdg-user-dirs)...\e[0m"
   x sudo apt install -y axel bc coreutils cliphist cmake curl rsync wget ripgrep jq meson xdg-user-dirs
